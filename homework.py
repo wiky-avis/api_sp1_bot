@@ -1,8 +1,7 @@
+import logging
 import os
 import time
-import logging
 from logging.handlers import RotatingFileHandler
-import json
 
 import requests
 import telegram
@@ -15,7 +14,10 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.setLevel(logging.DEBUG)
 handler = RotatingFileHandler(
-    filename='my_logger.log', maxBytes=50000000, backupCount=5, encoding='utf-8')
+    filename='my_logger.log',
+    maxBytes=50000000,
+    backupCount=5,
+    encoding='utf-8')
 logger_formatter = logging.Formatter(
     '%(asctime)s, %(levelname)s, %(message)s, %(name)s')
 handler.setFormatter(logger_formatter)
