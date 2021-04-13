@@ -5,10 +5,12 @@ from logging.handlers import RotatingFileHandler
 
 import requests
 import telegram
-from dotenv import load_dotenv
-from telegram.ext import Updater
+from boto.s3.connection import S3Connection
 
-load_dotenv()
+#from dotenv import load_dotenv
+
+#load_dotenv()
+
 
 
 logger = logging.getLogger(__name__)
@@ -26,10 +28,13 @@ logger.addHandler(handler)
 logger.info('Настройка логгирования окончена!')
 
 
-PRAKTIKUM_TOKEN = os.getenv('PRAKTIKUM_TOKEN')
-TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
-CHAT_ID = os.getenv('CHAT_ID')
+# PRAKTIKUM_TOKEN = os.getenv('PRAKTIKUM_TOKEN')
+# TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+# CHAT_ID = os.getenv('CHAT_ID')
 
+PRAKTIKUM_TOKEN = S3Connection(os.environ['PRAKTIKUM_TOKEN'])
+TELEGRAM_TOKEN =S3Connection(os.environ['TELEGRAM_TOKEN'])
+CHAT_ID = S3Connection(os.environ['CHAT_ID'])
 
 def parse_homework_status(homework):
     homework_name = homework.get('homework_name')
