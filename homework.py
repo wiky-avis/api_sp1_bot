@@ -2,6 +2,7 @@ import os
 import time
 import logging
 from logging.handlers import RotatingFileHandler
+import json
 
 import requests
 import telegram
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.setLevel(logging.DEBUG)
 handler = RotatingFileHandler(
-    filename='my_logger.log', maxBytes=50000000, backupCount=5)
+    filename='my_logger.log', maxBytes=50000000, backupCount=5, encoding='utf-8')
 logger_formatter = logging.Formatter(
     '%(asctime)s, %(levelname)s, %(message)s, %(name)s')
 handler.setFormatter(logger_formatter)
@@ -34,7 +35,8 @@ def parse_homework_status(homework):
     elif homework.get('status') == 'reviewing':
         verdict = 'Работа взята в ревью.'
     else:
-        verdict = 'Ревьюеру всё понравилось, можно приступать к следующему уроку.'
+        verdict = (
+            'Ревьюеру всё понравилось, можно приступать к следующему уроку.')
     return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
 
 
@@ -44,7 +46,10 @@ def get_homework_statuses(current_timestamp):
     homework_statuses = requests.get(
         'https://praktikum.yandex.ru/api/user_api/homework_statuses/',
         headers=headers, params=params)
-    return homework_statuses.json()
+    try:
+        return homework_statuses.json()
+    except json.JSONDecodeError:
+        logging.error('Сервер вернул ответ не в JSON')
 
 
 def send_message(message, bot_client):
