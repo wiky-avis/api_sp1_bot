@@ -46,10 +46,7 @@ def get_homework_statuses(current_timestamp):
     homework_statuses = requests.get(
         'https://praktikum.yandex.ru/api/user_api/homework_statuses/',
         headers=headers, params=params)
-    try:
-        return homework_statuses.json()
-    except json.JSONDecodeError:
-        logging.error('Сервер вернул ответ не в JSON')
+    return homework_statuses.json()
 
 
 def send_message(message, bot_client):
