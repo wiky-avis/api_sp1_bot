@@ -6,6 +6,7 @@ from logging.handlers import RotatingFileHandler
 import requests
 import telegram
 from dotenv import load_dotenv
+from telegram.ext import Updater
 
 load_dotenv()
 
@@ -44,7 +45,7 @@ def parse_homework_status(homework):
 
 def get_homework_statuses(current_timestamp):
     headers = {'Authorization': f'OAuth {PRAKTIKUM_TOKEN}'}
-    params = {'from_date': current_timestamp}
+    params = {'from_date': 0}
     homework_statuses = requests.get(
         'https://praktikum.yandex.ru/api/user_api/homework_statuses/',
         headers=headers, params=params)
@@ -60,6 +61,7 @@ def main():
     logger.debug('Бот запущен!')
     current_timestamp = int(time.time())
 
+
     while True:
         try:
             new_homework = get_homework_statuses(current_timestamp)
@@ -70,12 +72,12 @@ def main():
                 logger.info('Сообщение отправлено!')
             current_timestamp = new_homework.get(
                 'current_date', current_timestamp)
-            time.sleep(300)
+            time.sleep(1200)
 
         except Exception as error:
             logging.error(f'Бот столкнулся с ошибкой: {error}')
             send_message('Бот столкнулся с ошибкой', bot_client)
-            time.sleep(5)
+            time.sleep(300)
 
 
 if __name__ == '__main__':
