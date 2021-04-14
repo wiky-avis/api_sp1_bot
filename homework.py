@@ -1,3 +1,4 @@
+import json
 import logging
 import logging.config
 import os
@@ -42,7 +43,7 @@ def get_homework_statuses(current_timestamp):
     if current_timestamp is None:
         current_timestamp = int(time.time())
     headers = {'Authorization': f'OAuth {PRAKTIKUM_TOKEN}'}
-    params = {'from_date': 0}
+    params = {'from_date': current_timestamp}
     try:
         homework_statuses = requests.get(
             'https://praktikum.yandex.ru/api/user_api/homework_statuses/',
@@ -51,7 +52,10 @@ def get_homework_statuses(current_timestamp):
     except requests.exceptions.HTTPError as error:
         logger.error(f'Сервер Яндекса недоступен: {error}')
     else:
-        return homework_statuses.json()
+        try:
+            return homework_statuses.json()
+        except json.JSONDecodeError as error:
+            logger.error(f'Это не JSON: {error}')
 
 
 def send_message(message, bot_client):
@@ -73,12 +77,12 @@ def main():
                 logger.info('Сообщение отправлено!')
             current_timestamp = new_homework.get(
                 'current_date', current_timestamp)
-            time.sleep(300)
+            time.sleep(1200)
 
         except Exception as error:
             logger.error(f'Бот столкнулся с ошибкой: {error}')
             send_message('Бот столкнулся с ошибкой', bot_client)
-            time.sleep(5)
+            time.sleep(300)
 
 
 if __name__ == '__main__':
