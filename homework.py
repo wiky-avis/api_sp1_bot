@@ -1,40 +1,36 @@
 import logging
+import logging.config
 import os
 import time
-from logging.handlers import RotatingFileHandler
 
 import requests
 import telegram
 from dotenv import load_dotenv
 
+from logger import LOGGING_CONFIG
+
 load_dotenv()
 
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-logger.setLevel(logging.DEBUG)
-handler = RotatingFileHandler(
-    filename='my_logger.log',
-    maxBytes=50000000,
-    backupCount=5,
-    encoding='utf-8')
-logger_formatter = logging.Formatter(
-    '%(asctime)s, %(levelname)s, %(message)s, %(name)s')
-handler.setFormatter(logger_formatter)
-logger.addHandler(handler)
+logging.config.dictConfig(LOGGING_CONFIG)
+logger = logging.getLogger('info')
+logger = logging.getLogger('debug')
 logger.info('Настройка логгирования окончена!')
-
 
 PRAKTIKUM_TOKEN = os.getenv('PRAKTIKUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 CHAT_ID = os.getenv('CHAT_ID')
 
+bot = telegram.Bot(token=TELEGRAM_TOKEN)
+
 
 def parse_homework_status(homework):
     homework_name = homework.get('homework_name')
-    if homework.get('status') == 'rejected':
+    status = homework.get('status')
+    if homework_name is None or status is None:
+        return 'Неверный ответ сервера'
+    elif status == 'rejected':
         verdict = 'К сожалению в работе нашлись ошибки.'
-    elif homework.get('status') == 'reviewing':
+    elif status == 'reviewing':
         verdict = 'Работа взята в ревью.'
     else:
         verdict = (
@@ -43,12 +39,19 @@ def parse_homework_status(homework):
 
 
 def get_homework_statuses(current_timestamp):
+    if current_timestamp is None:
+        current_timestamp = int(time.time())
     headers = {'Authorization': f'OAuth {PRAKTIKUM_TOKEN}'}
-    params = {'from_date': current_timestamp}
-    homework_statuses = requests.get(
-        'https://praktikum.yandex.ru/api/user_api/homework_statuses/',
-        headers=headers, params=params)
-    return homework_statuses.json()
+    params = {'from_date': 0}
+    try:
+        homework_statuses = requests.get(
+            'https://praktikum.yandex.ru/api/user_api/homework_statuses/',
+            headers=headers, params=params)
+        homework_statuses.raise_for_status()
+    except requests.exceptions.HTTPError as error:
+        logger.error(f'Сервер Яндекса недоступен: {error}')
+    else:
+        return homework_statuses.json()
 
 
 def send_message(message, bot_client):
@@ -56,7 +59,7 @@ def send_message(message, bot_client):
 
 
 def main():
-    bot_client = telegram.Bot(token=TELEGRAM_TOKEN)
+    bot_client = bot
     logger.debug('Бот запущен!')
     current_timestamp = int(time.time())
 
@@ -73,7 +76,7 @@ def main():
             time.sleep(300)
 
         except Exception as error:
-            logging.error(f'Бот столкнулся с ошибкой: {error}')
+            logger.error(f'Бот столкнулся с ошибкой: {error}')
             send_message('Бот столкнулся с ошибкой', bot_client)
             time.sleep(5)
 
