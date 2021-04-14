@@ -5,7 +5,6 @@ from logging.handlers import RotatingFileHandler
 
 import requests
 import telegram
-from boto.s3.connection import S3Connection
 
 #from dotenv import load_dotenv
 
@@ -32,9 +31,9 @@ logger.info('Настройка логгирования окончена!')
 # TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 # CHAT_ID = os.getenv('CHAT_ID')
 
-PRAKTIKUM_TOKEN = S3Connection(os.environ['PRAKTIKUM_TOKEN'])
-TELEGRAM_TOKEN =S3Connection(os.environ['TELEGRAM_TOKEN'])
-CHAT_ID = S3Connection(os.environ['CHAT_ID'])
+PRAKTIKUM_TOKEN = os.environ['PRAKTIKUM_TOKEN']
+TELEGRAM_TOKEN = os.environ['TELEGRAM_TOKEN']
+CHAT_ID = os.environ['CHAT_ID']
 
 def parse_homework_status(homework):
     homework_name = homework.get('homework_name')
@@ -50,7 +49,7 @@ def parse_homework_status(homework):
 
 def get_homework_statuses(current_timestamp):
     headers = {'Authorization': f'OAuth {PRAKTIKUM_TOKEN}'}
-    params = {'from_date': 0}
+    params = {'from_date': current_timestamp}
     homework_statuses = requests.get(
         'https://praktikum.yandex.ru/api/user_api/homework_statuses/',
         headers=headers, params=params)
