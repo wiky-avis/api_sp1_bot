@@ -39,12 +39,19 @@ def parse_homework_status(homework):
 
 
 def get_homework_statuses(current_timestamp):
+    if current_timestamp is None:
+        current_timestamp = int(time.time())
     headers = {'Authorization': f'OAuth {PRAKTIKUM_TOKEN}'}
-    params = {'from_date': 0}
-    homework_statuses = requests.get(
-        'https://praktikum.yandex.ru/api/user_api/homework_statuses/',
-        headers=headers, params=params)
-    return homework_statuses.json()
+    params = {'from_date': current_timestamp}
+    try:
+        homework_statuses = requests.get(
+            'https://praktikum.yandex.ru/api/user_api/homework_statuses/',
+            headers=headers, params=params)
+        homework_statuses.raise_for_status()
+    except requests.exceptions.RequestException as error:
+        logger.error(f'Сервер Яндекса недоступен: {error}')
+    else:
+        return homework_statuses.json()
 
 
 def send_message(message, bot_client):
