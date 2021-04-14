@@ -23,10 +23,10 @@ LOGGING_CONFIG = {
     'loggers': {
         'info': {
             'handlers': ['fileHandler'],
-            'level': 'INFO',},
+            'level': 'INFO'},
         'debug': {
             'handlers': ['fileHandler'],
-            'level':'DEBUG',}},
+            'level': 'DEBUG'}},
     'formatters': {
         'myFormatter': {
             'format': '%(asctime)s, %(levelname)s, %(message)s'}}}
