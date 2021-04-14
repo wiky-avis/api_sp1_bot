@@ -8,7 +8,7 @@ import requests
 import telegram
 from dotenv import load_dotenv
 
-from logger import LOGGING_CONFIG
+from logger_conf import LOGGING_CONFIG
 
 load_dotenv()
 
