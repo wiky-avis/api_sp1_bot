@@ -1,28 +1,20 @@
 import logging
+import logging.config
 import os
 import time
-from logging.handlers import RotatingFileHandler
 
 import requests
 import telegram
-
 from dotenv import load_dotenv
+
+from logger import LOGGING_CONFIG
 
 load_dotenv()
 
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-logger.setLevel(logging.DEBUG)
-handler = RotatingFileHandler(
-    filename='my_logger.log',
-    maxBytes=50000000,
-    backupCount=5,
-    encoding='utf-8')
-logger_formatter = logging.Formatter(
-    '%(asctime)s, %(levelname)s, %(message)s, %(name)s')
-handler.setFormatter(logger_formatter)
-logger.addHandler(handler)
+logging.config.dictConfig(LOGGING_CONFIG)
+logger = logging.getLogger('info')
+logger = logging.getLogger('debug')
 logger.info('Настройка логгирования окончена!')
 
 
@@ -33,9 +25,12 @@ CHAT_ID = os.getenv('CHAT_ID')
 
 def parse_homework_status(homework):
     homework_name = homework.get('homework_name')
-    if homework.get('status') == 'rejected':
+    status = homework.get('status')
+    if homework_name is None or status is None:
+        return 'Неверный ответ сервера'
+    elif status == 'rejected':
         verdict = 'К сожалению в работе нашлись ошибки.'
-    elif homework.get('status') == 'reviewing':
+    elif status == 'reviewing':
         verdict = 'Работа взята в ревью.'
     else:
         verdict = (
@@ -45,7 +40,7 @@ def parse_homework_status(homework):
 
 def get_homework_statuses(current_timestamp):
     headers = {'Authorization': f'OAuth {PRAKTIKUM_TOKEN}'}
-    params = {'from_date': current_timestamp}
+    params = {'from_date': 0}
     homework_statuses = requests.get(
         'https://praktikum.yandex.ru/api/user_api/homework_statuses/',
         headers=headers, params=params)
@@ -74,7 +69,7 @@ def main():
             time.sleep(1200)
 
         except Exception as error:
-            logging.error(f'Бот столкнулся с ошибкой: {error}')
+            logger.error(f'Бот столкнулся с ошибкой: {error}')
             send_message('Бот столкнулся с ошибкой', bot_client)
             time.sleep(300)
 
