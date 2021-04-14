@@ -11,7 +11,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.setLevel(logging.DEBUG)
