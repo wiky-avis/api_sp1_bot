@@ -66,6 +66,7 @@ def get_homework_statuses(current_timestamp):
     params = {'from_date': current_timestamp}
     try:
         homework_statuses = requests.get(url, headers=headers, params=params)
+        homework_statuses.raise_for_status()
     except requests.exceptions.ConnectionError as error:
         logger.error(f'Проблема с сетью: {error}')
     except requests.exceptions.HTTPError as error:
