@@ -61,15 +61,19 @@ def parse_homework_status(homework):
 def get_homework_statuses(current_timestamp):
     if current_timestamp is None:
         current_timestamp = int(time.time())
+    url = 'https://praktikum.yandex.ru/api/user_api/homework_statuses/'
     headers = {'Authorization': f'OAuth {PRAKTIKUM_TOKEN}'}
     params = {'from_date': current_timestamp}
     try:
-        homework_statuses = requests.get(
-            'https://praktikum.yandex.ru/api/user_api/homework_statuses/',
-            headers=headers, params=params)
-        homework_statuses.raise_for_status()
+        homework_statuses = requests.get(url, headers=headers, params=params)
+    except requests.exceptions.ConnectionError as error:
+        logger.error(f'Проблема с сетью: {error}')
     except requests.exceptions.HTTPError as error:
-        logger.error(f'Сервер Яндекса недоступен: {error}')
+        logger.error(f'Недопустимый HTTP-ответ: {error}')
+    except requests.exceptions.Timeout as error:
+        logger.error(f'Время ожидания запроса истекло: {error}')
+    except requests.exceptions.TooManyRedirects as error:
+        logger.error(f'Несуществующий URL: {error}')
     else:
         try:
             return homework_statuses.json()
