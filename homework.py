@@ -1,6 +1,7 @@
 import json
 import logging
-import logging.config
+import logging.config  # без этого импорта, код не работает
+# AttributeError: module 'logging' has no attribute 'config'
 import os
 import time
 
@@ -40,14 +41,12 @@ PRAKTIKUM_TOKEN = os.getenv('PRAKTIKUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 CHAT_ID = os.getenv('CHAT_ID')
 
-bot = telegram.Bot(token=TELEGRAM_TOKEN)
-
 
 def parse_homework_status(homework):
     homework_name = homework.get('homework_name')
     status = homework.get('status')
     if homework_name is None or status is None:
-        return 'Неверный ответ сервера'
+        return logger.error('Неверный ответ сервера')
     elif status == 'rejected':
         verdict = 'К сожалению в работе нашлись ошибки.'
     elif status == 'reviewing':
@@ -59,27 +58,31 @@ def parse_homework_status(homework):
 
 
 def get_homework_statuses(current_timestamp):
-    if current_timestamp is None:
-        current_timestamp = int(time.time())
+    current_timestamp = (
+        int(time.time()) if current_timestamp is None else current_timestamp)
     url = 'https://praktikum.yandex.ru/api/user_api/homework_statuses/'
     headers = {'Authorization': f'OAuth {PRAKTIKUM_TOKEN}'}
     params = {'from_date': current_timestamp}
     try:
         homework_statuses = requests.get(url, headers=headers, params=params)
-        homework_statuses.raise_for_status()
     except requests.exceptions.ConnectionError as error:
         logger.error(f'Проблема с сетью: {error}')
+        return dict()
     except requests.exceptions.HTTPError as error:
         logger.error(f'Недопустимый HTTP-ответ: {error}')
+        return dict()
     except requests.exceptions.Timeout as error:
         logger.error(f'Время ожидания запроса истекло: {error}')
+        return dict()
     except requests.exceptions.TooManyRedirects as error:
         logger.error(f'Несуществующий URL: {error}')
+        return dict()
     else:
         try:
             return homework_statuses.json()
         except json.JSONDecodeError as error:
             logger.error(f'Это не JSON: {error}')
+            return dict()
 
 
 def send_message(message, bot_client):
@@ -87,7 +90,7 @@ def send_message(message, bot_client):
 
 
 def main():
-    bot_client = bot
+    bot_client = telegram.Bot(token=TELEGRAM_TOKEN)
     logger.debug('Бот запущен!')
     current_timestamp = int(time.time())
 
