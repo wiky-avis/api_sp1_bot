@@ -1,7 +1,7 @@
 import json
 import logging
-import logging.config  # без этого импорта, код не работает
-# AttributeError: module 'logging' has no attribute 'config'
+import logging.config
+
 import os
 import time
 
@@ -46,7 +46,8 @@ def parse_homework_status(homework):
     homework_name = homework.get('homework_name')
     status = homework.get('status')
     if homework_name is None or status is None:
-        return logger.error('Неверный ответ сервера')
+        logger.error('Неверный ответ сервера')
+        return 'Неверный ответ сервера'
     elif status == 'rejected':
         verdict = 'К сожалению в работе нашлись ошибки.'
     elif status == 'reviewing':
@@ -58,32 +59,21 @@ def parse_homework_status(homework):
 
 
 def get_homework_statuses(current_timestamp):
-    current_timestamp = (
-        int(time.time()) if current_timestamp is None else current_timestamp)
-    url = 'https://praktikum.yandex.ru/api/user_api/homework_statuses/'
+    current_timestamp = current_timestamp or int(time.time())
+    url = 'https://praktikum.yandex.ru/api/user_api/homework_statuses2/'
     headers = {'Authorization': f'OAuth {PRAKTIKUM_TOKEN}'}
     params = {'from_date': current_timestamp}
     try:
         homework_statuses = requests.get(url, headers=headers, params=params)
-        homework_statuses.raise_for_status()
-    except requests.exceptions.ConnectionError as error:
-        logger.error(f'Проблема с сетью: {error}')
-        return dict()
-    except requests.exceptions.HTTPError as error:
-        logger.error(f'Недопустимый HTTP-ответ: {error}')
-        return dict()
-    except requests.exceptions.Timeout as error:
-        logger.error(f'Время ожидания запроса истекло: {error}')
-        return dict()
-    except requests.exceptions.TooManyRedirects as error:
-        logger.error(f'Несуществующий URL: {error}')
-        return dict()
+    except Exception as error:
+        logger.error(f'Неверный ответ сервера: {error}')
+        return {}
     else:
         try:
             return homework_statuses.json()
         except json.JSONDecodeError as error:
             logger.error(f'Это не JSON: {error}')
-            return dict()
+            return {}
 
 
 def send_message(message, bot_client):
