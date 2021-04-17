@@ -1,7 +1,6 @@
 import json
 import logging
 import logging.config
-
 import os
 import time
 
@@ -65,7 +64,8 @@ def get_homework_statuses(current_timestamp):
     params = {'from_date': current_timestamp}
     try:
         homework_statuses = requests.get(url, headers=headers, params=params)
-    except Exception as error:
+        homework_statuses.raise_for_status()
+    except requests.exceptions.HTTPError as error:
         logger.error(f'Неверный ответ сервера: {error}')
         return {}
     else:
