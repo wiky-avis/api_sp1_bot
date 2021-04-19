@@ -59,21 +59,15 @@ def parse_homework_status(homework):
 
 def get_homework_statuses(current_timestamp):
     current_timestamp = current_timestamp or int(time.time())
-    url = 'https://praktikum.yandex.ru/api/user_api/homework_statuses2/'
+    url = 'https://praktikum.yandex.ru/api/user_api/homework_statuses/'
     headers = {'Authorization': f'OAuth {PRAKTIKUM_TOKEN}'}
     params = {'from_date': current_timestamp}
     try:
         homework_statuses = requests.get(url, headers=headers, params=params)
-        homework_statuses.raise_for_status()
-    except requests.exceptions.HTTPError as error:
+        return homework_statuses.json()
+    except Exception as error:
         logger.error(f'Неверный ответ сервера: {error}')
         return {}
-    else:
-        try:
-            return homework_statuses.json()
-        except json.JSONDecodeError as error:
-            logger.error(f'Это не JSON: {error}')
-            return {}
 
 
 def send_message(message, bot_client):
